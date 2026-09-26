@@ -1,0 +1,47 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+tab_width = 2
+
+[*.cs]
+indent_size = 2
+# XML ドキュメント: /// <see ... /> および /// <inheritdoc /> は使用しない
+tab_width = 2
+csharp_indent_size = 2
+csharp_tab_width = 2
+csharp_indent_block_contents = true
+csharp_indent_braces = false
+csharp_indent_case_contents = true
+csharp_indent_switch_labels = true
+
+# { の改行: 列挙した対象のみ「次の行に {」。class / methods / control_blocks は含めない（前行に {）
+csharp_new_line_before_open_brace = namespaces, type_parameter_constraints, properties, accessors, anonymous_types, object_collection_array_initializers, lambdas, local_functions
+csharp_new_line_before_else = false
+csharp_new_line_before_catch = false
+csharp_new_line_before_finally = false
+csharp_new_line_before_members_in_object_initializers = true
+
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = false
+
+[*.csproj]
+indent_size = 2
+
+[*.json]
+indent_size = 2
+
+[*.sql]
+indent_size = 2
+
+[*.md]
+indent_size = 2
+trim_trailing_whitespace = false
+
+[*.py]
+indent_size = 4

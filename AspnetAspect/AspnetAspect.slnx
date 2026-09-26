@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="AspectSample/AspectSample.csproj" Id="d34e837c-b2ce-43c1-b0d9-31be5c82b294" DefaultStartup="true" />
+  <Project Path="AspnetAspect/AspnetAspect.csproj" />
+</Solution>

@@ -1,0 +1,101 @@
+@model AspectSample.Models.AccountStatus
+@{
+    ViewData["Title"] = "口座振替デモ";
+}
+
+<h1 class="mb-4">口座振替デモ</h1>
+
+@if (TempData["Message"] is string message)
+{
+    <div class="alert alert-success">@message</div>
+}
+
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+<h2 class="h4">口座残高</h2>
+<table class="table table-bordered w-auto">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>名称</th>
+            <th>残高</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var account in Model.Accounts)
+        {
+            <tr>
+                <td>@account.Id</td>
+                <td>@account.Name</td>
+                <td>@account.Balance.ToString("0.00")</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<h2 class="h4 mt-4">監査ログ</h2>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>メッセージ</th>
+            <th>日時 (UTC)</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model.AuditLogs.Count == 0)
+        {
+            <tr>
+                <td colspan="3">（なし）</td>
+            </tr>
+        }
+        else
+        {
+            @foreach (var log in Model.AuditLogs)
+            {
+                <tr>
+                    <td>@log.Id</td>
+                    <td>@log.Message</td>
+                    <td>@log.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+<h2 class="h4 mt-4">操作</h2>
+<p>振替金額は 100 固定です。</p>
+
+<form asp-action="Transfer" method="post" class="d-inline">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="amount" value="100" />
+    <input type="hidden" name="failureMode" value="@TransferFailureMode.None" />
+    <button type="submit" class="btn btn-primary me-2">正常振替</button>
+</form>
+
+<form asp-action="Transfer" method="post" class="d-inline">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="amount" value="100" />
+    <input type="hidden" name="failureMode" value="@TransferFailureMode.FailAfterAccountUpdate" />
+    <button type="submit" class="btn btn-warning me-2">口座更新後に失敗</button>
+</form>
+
+<form asp-action="Transfer" method="post" class="d-inline">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="amount" value="100" />
+    <input type="hidden" name="failureMode" value="@TransferFailureMode.FailAfterAudit" />
+    <button type="submit" class="btn btn-danger me-2">監査確定後に外側失敗</button>
+</form>
+
+<form asp-action="Reset" method="post" class="d-inline">
+    @Html.AntiForgeryToken()
+    <button type="submit" class="btn btn-secondary">初期化</button>
+</form>
+
+<ul class="mt-4">
+    <li>「口座更新後に失敗」: 監査呼び出し前に例外。口座更新はロールバック。</li>
+    <li>「監査確定後に外側失敗」: RequiresNew で監査だけ確定し、口座振替はロールバック。</li>
+</ul>

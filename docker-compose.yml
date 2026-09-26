@@ -1,0 +1,13 @@
+services:
+  mysql:
+    image: mysql:8.4
+    ports:
+      - "3306:3306"
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: aspect_sample
+      MYSQL_USER: aspect
+      MYSQL_PASSWORD: aspect
+    volumes:
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d
