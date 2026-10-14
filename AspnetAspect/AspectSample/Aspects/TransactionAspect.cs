@@ -24,7 +24,8 @@ public sealed class TransactionAspect : IAspect {
   /// <param name="next">内側のアスペクトまたは実装メソッド。</param>
   /// <returns>完了を表す Task。</returns>
   public async Task InvokeAsync(AspectContext context, AspectNext next) {
-    var transactional = (TransactionalAttribute)context.AspectAttribute;
+    var transactional = context.AspectAttribute as TransactionalAttribute
+      ?? throw new InvalidOperationException("TransactionalAttribute がありません。");
     var scopeOption = transactional.Propagation switch {
       TransactionPropagation.RequiresNew => TransactionScopeOption.RequiresNew,
       _ => TransactionScopeOption.Required

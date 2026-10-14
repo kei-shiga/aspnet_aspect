@@ -34,14 +34,40 @@ ASP.NET Core 上で **Spring 風の AOP（Attribute + インターセプタ連�
   - `AddSingletonAspectProxy<TInterface, TImplementation>()`
   - `AddTransientAspectProxy<TInterface, TImplementation>()`
 - 各拡張は **実装型** と **インタフェース用プロキシ** を同じ寿命で登録する。Service / Logic / Repository のいずれにも使える。
-- 有効にするアスペクトは **DI に登録された `IAspect` 実装**のうち、呼び出し対象の **Attribute 型が一致するものだけ**（グローバルな `AddAspect` で全メソッドに付与する方式は **採用しない**）。
+- 有効にするアスペクトは **DI に登録された `IAspect` 実装**のうち、呼び出し対象の **Attribute 型が一致するもの**、またはアスペクト側の **`ApplyTo` 式が一致するもの**です。
+- `ApplyTo` の式は `method(戻り値の型 型名.メソッド名(引数))` または `type(型や名前空間)` です。プロキシ経由のインタフェース呼び出しだけが対象です。
+- アドバイスのタイミングは `Before`、`AfterReturn`、`AfterThrow`、`After`、`Around` です。既存の `InvokeAsync` は `Around` として動きます。
 
 ### アスペクト動作要件
 
 **いつ実行するか**
 
 - メソッドに Attribute があればそれを優先。なければ **クラス** の Attribute を参照。
-- どちらにも無い Attribute 型に対応するアスペクトは **実行しない**。
+- どちらにも無い Attribute 型に対応する `InvokeAsync` は、クラスの `ApplyTo` が一致するときだけ実行する。
+- `[Before]` などのメソッドは、自分の `ApplyTo`、または参照先メソッドの `ApplyTo` がインタフェースメソッドに一致するとき実行する。
+
+**ApplyTo**
+
+```csharp
+[ApplyTo("method(* AspectSample.Services.IAccountService.Transfer*(..))")]
+[ApplyTo("type(AspectSample.Repositories.*)")]
+```
+
+- `method` は戻り値の型、インタフェースの完全名、メソッド名、引数リストで比較する。メソッド名の `*` は任意の文字列、引数の `(..)` は引数の数と型を問わない。
+- `type(名前空間.型名)` はそのインタフェースだけ、`type(名前空間.*)` はその名前空間直下、`type(名前空間..*)` はその名前空間と配下である。
+- 複数の `[ApplyTo]` は、どれか 1 つに一致すれば対象になる。
+- 引数のないメソッドに `[ApplyTo]` を付け、`[Before(nameof(そのメソッド))]` のように参照できる。
+
+**アドバイスの順**
+
+1. `Around` の開始（`InvokeAsync` を含む）
+2. `Before`
+3. 内側のアスペクト、または実装メソッド
+4. 正常終了なら `AfterReturn`、例外なら `AfterThrow`
+5. 正常でも例外でも `After`
+6. `Around` の残り
+
+`Around` が内側へ進む処理を呼ばなければ、その内側は実行されない。アスペクトクラス同士は `IAspect.Order` の小さい方が外側になる。
 
 **複数アスペクト**
 
@@ -76,8 +102,9 @@ ASP.NET Core 上で **Spring 風の AOP（Attribute + インターセプタ連�
 
 **サンプルアスペクト**
 
-- `LogAttribute` + `MethodLoggingAspect`（`ILogger` で開始・終了、例外時も終了ログのあと再スロー）。
+- `LogAttribute` + `MethodLoggingAspect`（`ILogger` で開始・終了、例外時も終了ログのあと再スロー）。Repository は `[Log]` を付けず、`type(AspectSample.Repositories.*)` の `Before`、`After`、`AfterThrow` でログを出す。
 - `TransactionalAttribute`（既定 `Required`）+ `TransactionAspect`（`TransactionPropagation`: `Required` / `RequiresNew`）。
+- `PerformanceAspect` は `type(AspectSample.Services.IAccountService)` の `Around` で、サービスメソッドの実行時間をミリ秒でログ出力する。`Order` は 2 で、ログとトランザクションの内側です。
 - 例: `AccountService` に `[Log]` `[Transactional]`、`AuditLogic.RecordAsync` に `[Transactional(Propagation = RequiresNew)]`。
 
 **画面・操作（`/Account`）**

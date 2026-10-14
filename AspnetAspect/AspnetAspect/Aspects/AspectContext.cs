@@ -13,13 +13,13 @@ public sealed class AspectContext {
   /// <param name="implementationMethod">実際に実行される実装側のメソッド。</param>
   /// <param name="target">プロキシの実体インスタンス。</param>
   /// <param name="arguments">メソッド引数。</param>
-  /// <param name="aspectAttribute">このアスペクト実行に使用する Attribute。</param>
+  /// <param name="aspectAttribute">このアスペクト実行に使用する Attribute。ApplyTo だけで一致したときは null。</param>
   public AspectContext(
     MethodInfo interfaceMethod,
     MethodInfo implementationMethod,
     object target,
     object?[]? arguments,
-    AspectAttribute aspectAttribute) {
+    AspectAttribute? aspectAttribute) {
     InterfaceMethod = interfaceMethod;
     ImplementationMethod = implementationMethod;
     Target = target;
@@ -48,7 +48,7 @@ public sealed class AspectContext {
   public object?[]? Arguments { get; }
 
   /// <summary>
-  /// このアスペクト実行に使用する Attribute です。
+  /// このアスペクト実行に使用する Attribute です。ApplyTo だけで一致したときは null です。
   /// </summary>
-  public AspectAttribute AspectAttribute { get; }
+  public AspectAttribute? AspectAttribute { get; }
 }

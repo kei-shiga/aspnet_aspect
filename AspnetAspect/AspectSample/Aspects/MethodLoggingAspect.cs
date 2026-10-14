@@ -3,7 +3,7 @@ using AspnetAspect.Aspects;
 namespace AspectSample.Aspects;
 
 /// <summary>
-/// LogAttribute が付いたメソッドの開始と終了をログ出力するアスペクトです。
+/// LogAttribute が付いたメソッドと、ApplyTo で選んだ Repository メソッドの開始と終了をログ出力するアスペクトです。
 /// </summary>
 public sealed class MethodLoggingAspect : IAspect {
   /// <summary>
@@ -46,5 +46,40 @@ public sealed class MethodLoggingAspect : IAspect {
       _logger.LogInformation(ex, "メソッド終了（例外）: {MethodName}", methodName);
       throw;
     }
+  }
+
+  /// <summary>
+  /// Repository インタフェースの全メソッドを選ぶ共有の適用先です。
+  /// </summary>
+  [ApplyTo("type(AspectSample.Repositories.*)")]
+  public void RepositoryCalls() {
+  }
+
+  /// <summary>
+  /// Repository メソッドの開始をログ出力します。
+  /// </summary>
+  /// <param name="context">呼び出しコンテキスト。</param>
+  [Before(nameof(RepositoryCalls))]
+  public void LogRepositoryStart(AspectContext context) {
+    _logger.LogInformation("メソッド開始: {MethodName}", context.InterfaceMethod.Name);
+  }
+
+  /// <summary>
+  /// Repository メソッドの終了をログ出力します。
+  /// </summary>
+  /// <param name="context">呼び出しコンテキスト。</param>
+  [After(nameof(RepositoryCalls))]
+  public void LogRepositoryEnd(AspectContext context) {
+    _logger.LogInformation("メソッド終了: {MethodName}", context.InterfaceMethod.Name);
+  }
+
+  /// <summary>
+  /// Repository メソッドが例外で終わったことをログ出力します。
+  /// </summary>
+  /// <param name="context">呼び出しコンテキスト。</param>
+  /// <param name="exception">送出された例外。</param>
+  [AfterThrow(nameof(RepositoryCalls))]
+  public void LogRepositoryError(AspectContext context, Exception exception) {
+    _logger.LogInformation(exception, "メソッド終了（例外）: {MethodName}", context.InterfaceMethod.Name);
   }
 }

@@ -11,8 +11,10 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddScoped<MethodLoggingAspect>();
 builder.Services.AddScoped<TransactionAspect>();
+builder.Services.AddScoped<PerformanceAspect>();
 builder.Services.AddScoped<IAspect>(sp => sp.GetRequiredService<MethodLoggingAspect>());
 builder.Services.AddScoped<IAspect>(sp => sp.GetRequiredService<TransactionAspect>());
+builder.Services.AddScoped<IAspect>(sp => sp.GetRequiredService<PerformanceAspect>());
 
 builder.Services.AddScopedAspectProxy<IAccountService, AccountService>();
 builder.Services.AddScopedAspectProxy<IAccountLogic, AccountLogic>();
